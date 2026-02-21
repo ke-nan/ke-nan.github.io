@@ -6,95 +6,177 @@ layout: default
 <!-- <img src="/img/icon_wechat.png" width="0" height="0"> -->
 <!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
 
-<!-- Post Header -->
-{% include intro-header.html type='post' %}
+<header class="tech-hero tech-post-hero">
+    <div class="tech-hero-inner">
+        {% if page.tags %}
+        <div class="tags tech-post-hero-tags">
+            {% for tag in page.tags %}
+            <a class="tag" href="{{ site.baseurl }}/archive/?tag={{ tag | url_encode }}" title="{{ tag }}">{{ tag }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <h1>{{ page.title }}</h1>
+        {% if page.subtitle %}
+        <p>{{ page.subtitle }}</p>
+        {% else %}
+        <p>{{ site.description }}</p>
+        {% endif %}
+        <div class="tech-post-meta">
+            Posted by {% if page.author %}{{ page.author }}{% else %}{{ site.title }}{% endif %}
+            on {{ page.date | date: "%B %-d, %Y" }}
+        </div>
+    </div>
+</header>
 
 <!-- Post Content -->
 <article>
-    <div class="container">
-        <div class="row">
+    <div class="container tech-post-shell">
+        <div class="tech-post-combined">
+            <div class="tech-post-grid">
+                {% unless page.no-catalog %}
+                <aside class="sidebar-container catalog-container tech-catalog-column">
+                    <div class="side-catalog">
+                        <h5>
+                            <a class="catalog-toggle" href="#">目录</a>
+                        </h5>
+                        <ul class="catalog-body"></ul>
+                    </div>
+                </aside>
+                {% endunless %}
 
-    <!-- Post Container -->
-            <div class="
-                col-lg-8 col-lg-offset-2
-                col-md-10 col-md-offset-1
-                post-container">
-
-                <!-- Multi-Lingual -->
-                {% if page.multilingual %}
-                    {% include multilingual-sel.html %}
-                {% endif %}
-
-				{{ content }}
-
-                <hr style="visibility: hidden;">
-                <ul class="pager">
-                    {% if page.previous.url %}
-                    <li class="previous">
-                        <a href="{{ page.previous.url | prepend: site.baseurl | replace: '//', '/' }}" data-toggle="tooltip" data-placement="top" title="{{page.previous.title}}">
-                        Previous<br>
-                        <span>{{page.previous.title}}</span>
-                        </a>
-                    </li>
+                <div class="post-container tech-post-card">
+                    <!-- Multi-Lingual -->
+                    {% if page.multilingual %}
+                        {% include multilingual-sel.html %}
                     {% endif %}
-                    {% if page.next.url %}
-                    <li class="next">
-                        <a href="{{ page.next.url | prepend: site.baseurl | replace: '//', '/' }}" data-toggle="tooltip" data-placement="top" title="{{page.next.title}}">
-                        Next<br>
-                        <span>{{page.next.title}}</span>
-                        </a>
-                    </li>
+
+                    {{ content }}
+
+                    <hr style="visibility: hidden;">
+                    <ul class="pager tech-post-pager">
+                        {% if page.previous.url %}
+                        <li class="previous">
+                            <a href="{{ page.previous.url | prepend: site.baseurl | replace: '//', '/' }}" data-toggle="tooltip" data-placement="top" title="{{page.previous.title}}">
+                            Previous<br>
+                            <span>{{page.previous.title}}</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% if page.next.url %}
+                        <li class="next">
+                            <a href="{{ page.next.url | prepend: site.baseurl | replace: '//', '/' }}" data-toggle="tooltip" data-placement="top" title="{{page.next.title}}">
+                            Next<br>
+                            <span>{{page.next.title}}</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    <hr style="visibility: hidden;">
+
+                    <!-- Featured Tags -->
+                    <div class="catalog-ignore" data-catalog-ignore="true">
+                        {% include featured-tags.html bottom=true %}
+                    </div>
+
+                    {% if site.disqus_username %}
+                    <!-- disqus 评论框 start -->
+                    <div class="comment">
+                        <div id="disqus_thread" class="disqus-thread"></div>
+                    </div>
+                    <!-- disqus 评论框 end -->
                     {% endif %}
-                </ul>
-                <hr style="visibility: hidden;">
 
-                {% if site.disqus_username %}
-                <!-- disqus 评论框 start -->
-                <div class="comment">
-                    <div id="disqus_thread" class="disqus-thread"></div>
+                    {% if site.netease_comment %}
+                    <!-- 网易云跟帖 评论框 start -->
+                    <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+                    <!-- 网易云跟帖 评论框 end -->
+                    {% endif %}
                 </div>
-                <!-- disqus 评论框 end -->
-                {% endif %}
-
-                {% if site.netease_comment %}
-                <!-- 网易云跟帖 评论框 start -->
-                <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
-                <!-- 网易云跟帖 评论框 end -->
-                {% endif %}
-            </div>  
-
-    <!-- Side Catalog Container -->
-        {% unless page.no-catalog %}
-            <div class="
-                col-lg-2 col-lg-offset-0
-                visible-lg-block
-                sidebar-container
-                catalog-container">
-                <div class="side-catalog">
-                    <hr class="hidden-sm hidden-xs">
-                    <h5>
-                        <a class="catalog-toggle" href="#">CATALOG</a>
-                    </h5>
-                    <ul class="catalog-body"></ul>
-                </div>
-            </div>
-        {% endunless %}
-
-    <!-- Sidebar Container -->
-            <div class="
-                col-lg-8 col-lg-offset-2
-                col-md-10 col-md-offset-1
-                sidebar-container">
-
-                <!-- Featured Tags -->
-                {% include featured-tags.html bottom=true %}
-
-                <!-- Friends Blog -->
-                {% include friends.html %}
             </div>
         </div>
     </div>
 </article>
+<button id="tech-back-top" class="tech-back-top" aria-label="Back to top" title="Back to top">
+    <i class="fa fa-chevron-up"></i>
+</button>
+<script>
+    (function () {
+        var button = document.getElementById('tech-back-top');
+        var catalogColumn = document.querySelector('.tech-catalog-column');
+        var combined = document.querySelector('.tech-post-combined');
+        var topOffset = 88;
+
+        function toggleBackTop() {
+            if (!button) return;
+            if (window.scrollY > 360) {
+                button.classList.add('visible');
+            } else {
+                button.classList.remove('visible');
+            }
+        }
+
+        function updateCatalogFixed() {
+            if (!catalogColumn) return;
+            if (window.innerWidth <= 991) {
+                catalogColumn.classList.remove('is-fixed');
+                catalogColumn.style.removeProperty('--tech-catalog-left');
+                catalogColumn.style.removeProperty('--tech-catalog-width');
+                catalogColumn.style.removeProperty('--tech-catalog-top');
+                return;
+            }
+            var catalog = catalogColumn.querySelector('.side-catalog');
+            if (!catalog) return;
+
+            var anchor = combined || catalogColumn;
+            var anchorRect = anchor.getBoundingClientRect();
+            var columnRect = catalogColumn.getBoundingClientRect();
+            var anchorTop = anchorRect.top + window.scrollY;
+            var anchorBottom = anchorRect.bottom + window.scrollY;
+            var catalogHeight = catalog.offsetHeight;
+            var start = anchorTop - topOffset;
+            var end = anchorBottom - topOffset - catalogHeight;
+
+            if (window.scrollY < start) {
+                catalogColumn.classList.remove('is-fixed');
+                catalogColumn.style.removeProperty('--tech-catalog-left');
+                catalogColumn.style.removeProperty('--tech-catalog-width');
+                catalogColumn.style.removeProperty('--tech-catalog-top');
+                return;
+            }
+
+            catalogColumn.classList.add('is-fixed');
+            catalogColumn.style.setProperty('--tech-catalog-left', columnRect.left + 'px');
+            catalogColumn.style.setProperty('--tech-catalog-width', columnRect.width + 'px');
+
+            var top = topOffset;
+            if (window.scrollY > end) {
+                top = anchorBottom - window.scrollY - catalogHeight;
+            }
+            catalogColumn.style.setProperty('--tech-catalog-top', top + 'px');
+        }
+
+        function onScroll() {
+            toggleBackTop();
+            updateCatalogFixed();
+        }
+
+        if (button) {
+            button.addEventListener('click', function () {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', function () {
+            updateCatalogFixed();
+        });
+        window.addEventListener('load', function () {
+            updateCatalogFixed();
+        });
+
+        onScroll();
+    })();
+</script>
 
 <!-- add support for mathjax by voleking-->
 {% if page.mathjax %}
@@ -156,7 +238,7 @@ layout: default
           placement: 'right',
           // icon: '#'
         };
-        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+        anchors.add().remove('.tech-post-hero h1').remove('.subheading').remove('.sidebar-container h5');
     })
 </script>
 <style>

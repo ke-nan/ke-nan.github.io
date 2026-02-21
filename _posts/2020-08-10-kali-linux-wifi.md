@@ -3,7 +3,6 @@ layout: post
 title: "Kali linux无线网络渗透测试"
 subtitle: "Hello World, Hello Blog"
 author: "Haike Nan"
-header-img: "img/home-bg.jpg"
 tags: 
   - kali
   - linux

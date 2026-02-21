@@ -4,7 +4,7 @@
 {% include head.html %}
 
 <!-- hack iOS CSS :active style -->
-<body ontouchstart="">
+<body class="layout-{{ page.layout | default: 'default' }}" ontouchstart="">
 
     {% include nav.html %}
     {% include search.html %}

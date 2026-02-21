@@ -3,7 +3,6 @@ layout: post
 title: "一键安装最新内核并开启 BBR 脚本"
 subtitle: "Hello World, Hello Blog"
 author: "Haike Nan"
-header-img: "img/home-bg.jpg"
 tags: 
   - BBR
   - linux

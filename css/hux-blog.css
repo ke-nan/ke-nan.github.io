@@ -1694,3 +1694,74 @@ img::-moz-selection {
 .no-scroll {
   overflow-y: hidden;
 }
+/* Theme refactor: pure CSS geometric header background */
+.intro-header {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  --header-bg: #10243d;
+  --header-fg: #ffffff;
+  --header-link: #ffffff;
+  --header-mask-color: rgba(9, 18, 34, 0.32);
+  background: var(--header-bg);
+}
+.intro-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: linear-gradient(125deg, rgba(255, 255, 255, 0.06) 0, rgba(255, 255, 255, 0.06) 16%, transparent 16%, transparent 100%), linear-gradient(35deg, rgba(255, 255, 255, 0.05) 0, rgba(255, 255, 255, 0.05) 22%, transparent 22%, transparent 100%), linear-gradient(145deg, rgba(0, 181, 255, 0.14) 0, rgba(0, 181, 255, 0) 60%), radial-gradient(circle at 15% 10%, rgba(255, 255, 255, 0.2), transparent 32%), radial-gradient(circle at 85% 80%, rgba(98, 0, 234, 0.18), transparent 36%);
+  background-size: 220px 220px, 260px 260px, auto, auto, auto;
+  background-position: 0 0, 35px 20px, center, left top, right bottom;
+}
+.intro-header[data-header-theme=dense]::before {
+  background-size: 170px 170px, 190px 190px, auto, auto, auto;
+  background-position: 0 0, 25px 12px, center, left top, right bottom;
+}
+.intro-header[data-header-theme=minimal]::before {
+  background-image: linear-gradient(130deg, rgba(255, 255, 255, 0.04), transparent 35%), radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.12), transparent 35%), radial-gradient(circle at 84% 78%, rgba(0, 181, 255, 0.12), transparent 42%);
+  background-size: auto, auto, auto;
+  background-position: center, left top, right bottom;
+}
+.intro-header[data-header-tone=light] {
+  --header-fg: #222831;
+  --header-link: #222831;
+  --header-mask-color: rgba(255, 255, 255, 0.15);
+}
+@media only screen and (max-width: 767px) {
+  .intro-header::before {
+    background-image: linear-gradient(132deg, rgba(255, 255, 255, 0.05), transparent 42%), radial-gradient(circle at 10% 12%, rgba(255, 255, 255, 0.18), transparent 36%), radial-gradient(circle at 85% 80%, rgba(0, 181, 255, 0.14), transparent 44%);
+    background-size: auto, auto, auto;
+    background-position: center, left top, right bottom;
+  }
+}
+.intro-header .header-mask {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  background: var(--header-mask-color);
+  z-index: 1;
+  pointer-events: none;
+}
+.intro-header .container {
+  position: relative;
+  z-index: 2;
+}
+.intro-header.style-text::before,
+.intro-header.style-text .header-mask {
+  display: none;
+}
+.intro-header .site-heading,
+.intro-header .post-heading,
+.intro-header .page-heading {
+  color: var(--header-fg);
+}
+.intro-header .post-heading .meta a,
+.intro-header .header-img-credit,
+.intro-header .header-img-credit a {
+  color: var(--header-link);
+}
+.intro-header .header-img-credit {
+  z-index: 2;
+}

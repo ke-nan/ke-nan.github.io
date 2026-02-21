@@ -1,16 +1,16 @@
 ---
-layout: default
+layout: tech-page
 title: 404
 hide-in-nav: true
 description: "你来到了没有知识的荒原 :("
-header-img: "img/404-bg.jpg"
 permalink: /404.html
 ---
 
-
-<!-- Page Header -->
-{% include intro-header.html type="page" short='true' %}
-
-<script>
-	document.body.classList.add('page-fullscreen');
-</script>
+<section class="tech-404">
+  <h2>PAGE NOT FOUND</h2>
+  <p>你访问的页面不存在，可能已被移动、重命名或暂时下线。</p>
+  <div class="tech-404-actions">
+    <a href="{{ site.baseurl }}/">返回首页</a>
+    <a href="{{ site.baseurl }}/archive/">浏览归档</a>
+  </div>
+</section>

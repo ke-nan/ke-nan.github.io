@@ -3,7 +3,6 @@ layout: post
 title: "Cisco路由器OSPF邻居状态异常原因汇总"
 subtitle: "Hello World, Hello Blog"
 author: "Haike Nan"
-header-img: "img/home-bg.jpg"
 tags: 
   - Cisco
   - 路由器

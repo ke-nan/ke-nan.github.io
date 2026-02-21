@@ -1,5 +1,5 @@
-Hi, I'm  Haike Nan, a self-taught network engineer specializing in routing, switching, security, wireless, virtualization, and have a bit of understanding of cloud computing. My site's domain is ccie.me, although I don’t actually have a CCIE certification. I just thought the domain was cool, and perhaps one day I'll pursue it to fulfill a dream.
+Hey, I'm Haike Nan, a latecomer network engineer focusing on routing and switching, security, wireless, virtualization, and distributed storage, with a basic understanding of cloud computing.
 
-I currently work for a provincial-level main distributor for New H3C, having implemented over ten hyper-converged and cloud desktop projects, including for city hospitals, industry group companies, and district-level government agencies.
+I currently work for a provincial-level cloud intelligence primary distributor of New H3C, and have delivered more than twenty hyper-converged and cloud desktop projects for leading enterprise groups, municipal and county-level hospitals, and government organizations.
 
-I like a quote from Lin Pei Man: "It's not that China lacks career paths for older engineers, it's just that the first generation of engineers hasn’t gotten old yet." I share this with myself and all the persevering uncles born in the '80s.
+I really like a quote from Lin Peiman: "It's not that China has no room for senior engineers, but that the first generation of engineers has not grown old yet." I share it with myself and with everyone born in the 1980s who is still holding on.

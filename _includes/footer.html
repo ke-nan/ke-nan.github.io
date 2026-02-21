@@ -7,9 +7,9 @@
                 {% include sns-links.html center=true %}
 
                 <p class="copyright text-muted">
-                    Copyright &copy; {{ site.title }} 2020-{{ site.time | date: '%Y' }}
+                    Copyright &copy; Haike Nan's Blog 2020-2026
                     <br>
-                    Powered by <a href="http://huangxuan.me">Hux Blog</a>
+                    Powered by jekyll
                 </p>
             </div>
         </div>
@@ -165,6 +165,9 @@
         // init
         var P = $(_containerSelector), a, n, t, l, i, c;
         a = P.find('h1,h2,h3,h4,h5,h6');
+        a = a.filter(function () {
+            return $(this).closest('[data-catalog-ignore="true"]').length === 0;
+        });
 
         // clean
         $(selector).html('')

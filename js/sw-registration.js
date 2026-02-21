@@ -32,6 +32,20 @@ function handleRegistration(registration){
 }
 
 if(navigator.serviceWorker){
+  const isLocalDev = ['localhost', '127.0.0.1'].includes(location.hostname);
+  if (isLocalDev) {
+    navigator.serviceWorker.getRegistrations()
+      .then((registrations) => {
+        registrations.forEach((registration) => registration.unregister());
+      })
+      .catch((error) => { console.log('ServiceWorker unregister failed: ', error); });
+
+    if (window.caches) {
+      caches.keys()
+        .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+        .catch((error) => { console.log('Cache clear failed: ', error); });
+    }
+  } else {
   // For security reasons, a service worker can only control the pages
   // that are in the same directory level or below it. That's why we put sw.js at ROOT level.
   navigator.serviceWorker
@@ -53,5 +67,6 @@ if(navigator.serviceWorker){
         action: function(e){location.reload()}
       })
     }
+  }
   }
 }

@@ -1,9 +1,8 @@
 # Site settings
 title: Haike Nan's Blog
 SEOTitle: 南海科的博客 | Haike Nan's Blog
-header-img: img/home-bg.jpg
 #email: huxpro@gmail.com
-description: "这里是 南海科 的个人博客，与你一起发现更大的世界"
+description: "世界是我们的游乐场"
 keyword: "南海科,博客,网络工程师,路由,交换,安全,无线,虚拟化,云计算"
 url: "https://ccie.me" # your host, for absolute URL
 baseurl: "" # for example, '/blog' if your blog hosted on 'host/blog'
@@ -74,7 +73,7 @@ ga_domain: ccie.me
 
 # Sidebar settings
 sidebar: true # whether or not using Sidebar.
-sidebar-about-description: "世界是我们的游乐场"
+sidebar-about-description: "我是Haike Nan，一名网络攻城狮，主修路由交换、安全、无线、虚拟化、分布式存储，略懂一点云计算。"
 sidebar-avatar: https://img.ccie.me/ciooo_com_263_4-124.jpg # use absolute URL, seeing it's used in both `/` and `/about/`
 
 # Featured Tags

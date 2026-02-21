@@ -3,7 +3,6 @@ layout: post
 title: "华为USG系列防火墙配置SSLVPN"
 subtitle: "Hello World, Hello Blog"
 author: "Haike Nan"
-header-img: "img/home-bg.jpg"
 tags: 
   - 华为
   - 防火墙
