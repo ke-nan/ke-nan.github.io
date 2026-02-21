@@ -1,0 +1,1070 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>机柜设备落位图</title>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+  <style>
+    :root {
+      --bg: #e9f7f7;
+      --panel: #ffffff;
+      --line: #000000;
+      --rack-bg: #00eaea;
+      --unit-bg: #00f0f0;
+      --slot-bg: #ffffff;
+      --device-bg: #d9e1d1;
+      --text: #1f2a38;
+      --muted: #667085;
+      --ok: #0f766e;
+      --bad: #b42318;
+      --row-h: 22px;
+      --slot-w: 180px;
+      --u-w: 40px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "SimSun", "Songti SC", serif;
+      background: linear-gradient(180deg, #ddf8f8 0%, #f6ffff 100%);
+      color: var(--text);
+    }
+
+    .app {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 16px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid #d8dee8;
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 20px;
+    }
+
+    h2 {
+      margin: 14px 0 8px;
+      font-size: 15px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    input, button {
+      width: 100%;
+      min-height: 34px;
+      border: 1px solid #c9d2e2;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 600;
+      background: #f2f7ff;
+    }
+
+    button:hover { background: #e6f0ff; }
+
+    .btn-primary {
+      background: #0f5bb8;
+      color: #fff;
+      border-color: #0f5bb8;
+    }
+
+    .btn-primary:hover { background: #0a4c9c; }
+
+    .device-pool {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+      max-height: 40vh;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .device-item {
+      border: 2px solid var(--line);
+      border-radius: 6px;
+      padding: 6px 8px;
+      background: var(--device-bg);
+      cursor: grab;
+      user-select: none;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    .device-item.selected {
+      box-shadow: inset 0 0 0 2px #1d4ed8;
+    }
+
+    .device-item .pool-name {
+      line-height: 1.2;
+      word-break: break-all;
+      flex: 1;
+    }
+
+    .device-item .pool-u {
+      font-size: 12px;
+      font-family: Consolas, monospace;
+      padding: 1px 4px;
+      border: 1px solid #000;
+      background: #fff;
+      flex: 0 0 auto;
+    }
+
+    .rack-wrap {
+      background: var(--panel);
+      border: 1px solid #d8dee8;
+      border-radius: 10px;
+      padding: 12px;
+      overflow: auto;
+    }
+
+    .rack-grid {
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+      min-height: 300px;
+    }
+
+    .rack {
+      min-width: calc(var(--slot-w) + var(--u-w) + var(--u-w));
+      border: 1px solid #000;
+      border-radius: 0;
+      overflow: hidden;
+      background: var(--rack-bg);
+    }
+
+    .rack-head {
+      display: grid;
+      grid-template-columns: var(--u-w) var(--slot-w) var(--u-w);
+    }
+
+    .u-left-title {
+      border: 1px solid var(--line);
+      background: var(--rack-bg);
+      min-height: 36px;
+    }
+
+    .rack-title {
+      border: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      font-weight: 700;
+      text-align: center;
+      padding: 6px;
+      background: var(--rack-bg);
+      min-height: 36px;
+    }
+
+    .u-title {
+      border: 1px solid var(--line);
+      text-align: center;
+      background: var(--rack-bg);
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+    }
+
+    .rack-body {
+      position: relative;
+    }
+
+    .rack-body::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: #000;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .unit-row {
+      display: grid;
+      grid-template-columns: var(--u-w) var(--slot-w) var(--u-w);
+      min-height: var(--row-h);
+    }
+
+    .rack-foot {
+      display: grid;
+      grid-template-columns: var(--u-w) var(--slot-w) var(--u-w);
+      min-height: var(--row-h);
+    }
+
+    .foot-cell {
+      border: 1px solid var(--line);
+      background: var(--rack-bg);
+    }
+
+    .left-band {
+      border: 1px solid var(--line);
+      background: var(--unit-bg);
+    }
+
+    .slot {
+      border: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      background: var(--slot-bg);
+    }
+
+    .slot.over { background: #d7ebe9; }
+    .slot.hover-target { box-shadow: inset 0 0 0 2px #1d4ed8; }
+
+    .u-num {
+      border: 1px solid var(--line);
+      background: var(--unit-bg);
+      text-align: center;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Consolas, monospace;
+    }
+
+    .placed-layer {
+      position: absolute;
+      top: 0;
+      left: var(--u-w);
+      width: var(--slot-w);
+      pointer-events: none;
+    }
+
+    .preview-layer {
+      position: absolute;
+      top: 0;
+      left: var(--u-w);
+      width: var(--slot-w);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .preview {
+      position: absolute;
+      left: 0;
+      width: var(--slot-w);
+      border: 2px dashed #0f766e;
+      background: rgba(15, 118, 110, 0.24);
+    }
+
+    .preview.invalid {
+      border-color: var(--bad);
+      background: rgba(180, 35, 24, 0.2);
+    }
+
+    .placed {
+      position: absolute;
+      left: 0;
+      width: var(--slot-w);
+      border: 2px solid var(--line);
+      background: var(--device-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2px 6px;
+      font-size: 13px;
+      pointer-events: auto;
+      cursor: grab;
+      user-select: none;
+      overflow: hidden;
+      z-index: 3;
+    }
+
+    .placed .name {
+      line-height: 1.2;
+      word-break: break-all;
+    }
+
+    .placed.selected {
+      box-shadow: inset 0 0 0 2px #1d4ed8;
+    }
+
+    .hint {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .tips {
+      margin-top: 12px;
+      padding: 10px;
+      background: #f8fafc;
+      border: 1px solid #e6ebf3;
+      border-radius: 6px;
+      color: #475467;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .ok { color: var(--ok); font-weight: 600; }
+
+    @media (max-width: 1000px) {
+      .app { grid-template-columns: 1fr; }
+      .device-pool { max-height: 24vh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="panel">
+      <h1>机柜设备落位图</h1>
+
+      <h2>机柜配置</h2>
+      <div class="row">
+        <div>
+          <label for="rackCount">机柜数量</label>
+          <input id="rackCount" type="number" min="1" max="20" value="2" />
+        </div>
+        <div>
+          <label for="uCount">每柜总U数</label>
+          <input id="uCount" type="number" min="1" max="60" value="42" />
+        </div>
+      </div>
+      <button id="genRacks">生成/重置机柜</button>
+
+      <h2>新增设备</h2>
+      <div class="row">
+        <div>
+          <label for="devName">设备名称</label>
+          <input id="devName" type="text" placeholder="如：超融合服务器1" />
+        </div>
+        <div>
+          <label for="devU">设备高度(U)</label>
+          <input id="devU" type="number" min="1" max="20" value="1" />
+        </div>
+      </div>
+      <button id="addDev">加入待放置设备池</button>
+
+      <h2>待放置设备</h2>
+      <div id="devicePool" class="device-pool"></div>
+      <div class="hint">拖动设备到右侧机柜槽位（支持预览占位）；支持 Ctrl+C / Ctrl+V 复制粘贴、Ctrl+Z 撤销、Delete 删除选中设备。</div>
+
+      <h2>导出</h2>
+      <button id="exportBtn" class="btn-primary">导出 XLSX</button>
+      <div id="status" class="tips">状态：<span class="ok">就绪</span></div>
+    </section>
+
+    <section class="rack-wrap">
+      <div id="rackGrid" class="rack-grid"></div>
+    </section>
+  </div>
+
+  <script>
+    const state = {
+      rackCount: 2,
+      totalU: 42,
+      racks: [],
+      devices: [],
+      nextId: 1,
+      draggingId: null,
+      preview: null,
+      selectedDeviceId: null,
+      copiedDeviceId: null,
+      hoverTarget: null
+    };
+    const historyStack = [];
+    const maxHistory = 120;
+
+    const rowPx = 22;
+
+    function setStatus(msg, ok = true) {
+      const el = document.getElementById('status');
+      el.innerHTML = `状态：<span class="${ok ? 'ok' : ''}">${msg}</span>`;
+    }
+
+    function createSnapshot() {
+      return {
+        rackCount: state.rackCount,
+        totalU: state.totalU,
+        racks: state.racks.map(r => ({
+          id: r.id,
+          name: r.name,
+          placements: r.placements.map(p => ({ ...p }))
+        })),
+        devices: state.devices.map(d => ({ ...d })),
+        nextId: state.nextId,
+        selectedDeviceId: state.selectedDeviceId,
+        copiedDeviceId: state.copiedDeviceId,
+        hoverTarget: state.hoverTarget ? { ...state.hoverTarget } : null
+      };
+    }
+
+    function restoreSnapshot(snapshot) {
+      state.rackCount = snapshot.rackCount;
+      state.totalU = snapshot.totalU;
+      state.racks = snapshot.racks.map(r => ({
+        id: r.id,
+        name: r.name,
+        placements: r.placements.map(p => ({ ...p }))
+      }));
+      state.devices = snapshot.devices.map(d => ({ ...d }));
+      state.nextId = snapshot.nextId;
+      state.selectedDeviceId = snapshot.selectedDeviceId;
+      state.copiedDeviceId = snapshot.copiedDeviceId;
+      state.hoverTarget = snapshot.hoverTarget ? { ...snapshot.hoverTarget } : null;
+      state.draggingId = null;
+      state.preview = null;
+      document.getElementById('rackCount').value = String(state.rackCount);
+      document.getElementById('uCount').value = String(state.totalU);
+      render();
+    }
+
+    function recordHistory() {
+      historyStack.push(createSnapshot());
+      if (historyStack.length > maxHistory) historyStack.shift();
+    }
+
+    function undoLastAction() {
+      if (!historyStack.length) {
+        setStatus('没有可撤销的操作', false);
+        return;
+      }
+      const snapshot = historyStack.pop();
+      restoreSnapshot(snapshot);
+      setStatus('已撤销上一步操作');
+    }
+
+    function initRacks(count, totalU, shouldRecord = true) {
+      if (shouldRecord) recordHistory();
+      state.rackCount = count;
+      state.totalU = totalU;
+      document.getElementById('rackCount').value = String(count);
+      document.getElementById('uCount').value = String(totalU);
+      state.racks = Array.from({ length: count }, (_, i) => ({
+        id: i + 1,
+        name: String.fromCharCode(65 + i) + '机柜',
+        placements: []
+      }));
+      state.devices.forEach(d => {
+        d.rackId = null;
+        d.topU = null;
+      });
+      render();
+      setStatus('机柜已重置');
+    }
+
+    function addDevice(name, u, shouldRecord = true) {
+      if (shouldRecord) recordHistory();
+      state.devices.push({
+        id: state.nextId++,
+        name,
+        u,
+        rackId: null,
+        topU: null
+      });
+      renderDevicePool();
+      setStatus(`设备已添加：${name}`);
+    }
+
+    function findRack(rackId) {
+      return state.racks.find(r => r.id === rackId);
+    }
+
+    function findDevice(deviceId) {
+      return state.devices.find(d => d.id === deviceId);
+    }
+
+    function canPlace(device, rackId, topU) {
+      if (topU > state.totalU) return false;
+      const bottomU = topU - device.u + 1;
+      if (bottomU < 1) return false;
+
+      const rack = findRack(rackId);
+      if (!rack) return false;
+      const movingId = device.id;
+
+      return !rack.placements.some(p => {
+        if (p.deviceId === movingId) return false;
+        const other = state.devices.find(d => d.id === p.deviceId);
+        if (!other) return false;
+        const otherTop = p.topU;
+        const otherBottom = otherTop - other.u + 1;
+        return !(topU < otherBottom || bottomU > otherTop);
+      });
+    }
+
+    function placeDevice(deviceId, rackId, topU) {
+      const device = findDevice(deviceId);
+      if (!device) return;
+
+      if (!canPlace(device, rackId, topU)) {
+        setStatus('放置失败：位置冲突或超出范围', false);
+        render();
+        return;
+      }
+      recordHistory();
+
+      state.racks.forEach(r => {
+        r.placements = r.placements.filter(p => p.deviceId !== deviceId);
+      });
+
+      const rack = findRack(rackId);
+      rack.placements.push({ deviceId, topU });
+      device.rackId = rackId;
+      device.topU = topU;
+      state.selectedDeviceId = deviceId;
+      state.preview = null;
+      render();
+      setStatus(`已放置：${device.name} -> ${rack.name} ${topU}U`);
+    }
+
+    function onDragStart(e, deviceId) {
+      state.draggingId = Number(deviceId);
+      state.selectedDeviceId = Number(deviceId);
+      e.dataTransfer.setData('text/plain', String(deviceId));
+      e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function onDragEnd() {
+      state.draggingId = null;
+      state.preview = null;
+      render();
+    }
+
+    function setHoverTarget(rackId, topU) {
+      state.hoverTarget = { rackId, topU };
+      const root = document.getElementById('rackGrid');
+      root.querySelectorAll('.slot.hover-target').forEach(el => el.classList.remove('hover-target'));
+      const hit = root.querySelector(`.slot[data-rack="${rackId}"][data-u="${topU}"]`);
+      if (hit) hit.classList.add('hover-target');
+    }
+
+    function updatePreview(rackId, topU) {
+      const id = state.draggingId;
+      if (!id) return;
+      const dev = findDevice(id);
+      if (!dev) return;
+      state.preview = {
+        rackId,
+        topU,
+        valid: canPlace(dev, rackId, topU),
+        u: dev.u
+      };
+      paintPreview();
+    }
+
+    function paintPreview() {
+      const root = document.getElementById('rackGrid');
+      if (!root) return;
+      root.querySelectorAll('.preview-layer').forEach(layer => {
+        layer.innerHTML = '';
+      });
+      if (!state.preview) return;
+      const layer = root.querySelector(`.preview-layer[data-rack="${state.preview.rackId}"]`);
+      if (!layer) return;
+      const pTop = (state.totalU - state.preview.topU) * rowPx;
+      const pHeight = state.preview.u * rowPx;
+      const preview = document.createElement('div');
+      preview.className = `preview ${state.preview.valid ? '' : 'invalid'}`.trim();
+      preview.style.top = `${pTop}px`;
+      preview.style.height = `${pHeight}px`;
+      layer.appendChild(preview);
+    }
+
+    function onDropSlot(e, rackId, topU) {
+      e.preventDefault();
+      const id = Number(e.dataTransfer.getData('text/plain') || state.draggingId);
+      if (!id) return;
+      placeDevice(id, rackId, topU);
+    }
+
+    function renderDevicePool() {
+      const pool = document.getElementById('devicePool');
+      const waiting = state.devices.filter(d => !d.rackId);
+      pool.innerHTML = '';
+
+      if (!waiting.length) {
+        pool.innerHTML = '<div class="tips">设备池为空</div>';
+        return;
+      }
+
+      waiting.forEach(d => {
+        const item = document.createElement('div');
+        item.className = 'device-item';
+        if (state.selectedDeviceId === d.id) item.classList.add('selected');
+        item.draggable = true;
+        item.style.height = `${Math.max(d.u * rowPx, rowPx)}px`;
+        item.innerHTML = `
+          <div class="pool-name">${d.name}</div>
+          <div class="pool-u">${d.u}U</div>
+        `;
+        item.addEventListener('click', () => {
+          state.selectedDeviceId = d.id;
+          renderDevicePool();
+          setStatus(`已选中：${d.name}`);
+        });
+        item.addEventListener('dragstart', ev => onDragStart(ev, d.id));
+        item.addEventListener('dragend', onDragEnd);
+        pool.appendChild(item);
+      });
+    }
+
+    function renderRacks() {
+      const root = document.getElementById('rackGrid');
+      root.innerHTML = '';
+
+      state.racks.forEach(rack => {
+        const rackEl = document.createElement('div');
+        rackEl.className = 'rack';
+
+        const head = document.createElement('div');
+        head.className = 'rack-head';
+        head.innerHTML = `
+          <div class="u-left-title"></div>
+          <div class="rack-title">${rack.name}</div>
+          <div class="u-title">U数</div>
+        `;
+        rackEl.appendChild(head);
+
+        const body = document.createElement('div');
+        body.className = 'rack-body';
+        body.style.setProperty('--row-h', `${rowPx}px`);
+
+        for (let u = state.totalU; u >= 1; u--) {
+          const row = document.createElement('div');
+          row.className = 'unit-row';
+
+          const leftBand = document.createElement('div');
+          leftBand.className = 'left-band';
+
+          const slot = document.createElement('div');
+          slot.className = 'slot';
+          slot.dataset.rack = String(rack.id);
+          slot.dataset.u = String(u);
+          slot.addEventListener('mouseenter', () => setHoverTarget(rack.id, u));
+          slot.addEventListener('click', () => setHoverTarget(rack.id, u));
+          slot.addEventListener('dragover', ev => {
+            ev.preventDefault();
+            slot.classList.add('over');
+            updatePreview(rack.id, u);
+          });
+          slot.addEventListener('dragleave', () => slot.classList.remove('over'));
+          slot.addEventListener('drop', ev => {
+            slot.classList.remove('over');
+            onDropSlot(ev, rack.id, u);
+          });
+
+          const uNum = document.createElement('div');
+          uNum.className = 'u-num';
+          uNum.textContent = String(u).padStart(2, '0');
+
+          row.appendChild(leftBand);
+          row.appendChild(slot);
+          row.appendChild(uNum);
+          body.appendChild(row);
+        }
+
+        const layer = document.createElement('div');
+        layer.className = 'placed-layer';
+        layer.style.height = `${state.totalU * rowPx}px`;
+
+        const previewLayer = document.createElement('div');
+        previewLayer.className = 'preview-layer';
+        previewLayer.dataset.rack = String(rack.id);
+        previewLayer.style.height = `${state.totalU * rowPx}px`;
+
+        rack.placements.forEach(p => {
+          const dev = findDevice(p.deviceId);
+          if (!dev) return;
+
+          const top = (state.totalU - p.topU) * rowPx;
+          const h = dev.u * rowPx;
+
+          const block = document.createElement('div');
+          block.className = 'placed';
+          block.style.top = `${top}px`;
+          block.style.height = `${h}px`;
+          block.draggable = true;
+          if (state.selectedDeviceId === dev.id) block.classList.add('selected');
+          block.innerHTML = `<div class="name">${dev.name}</div>`;
+          block.addEventListener('dragstart', ev => onDragStart(ev, dev.id));
+          block.addEventListener('dragend', onDragEnd);
+          block.addEventListener('click', ev => {
+            ev.stopPropagation();
+            state.selectedDeviceId = dev.id;
+            renderRacks();
+            setStatus(`已选中：${dev.name}（Ctrl+C复制）`);
+          });
+          block.addEventListener('dblclick', ev => {
+            ev.stopPropagation();
+            const nextName = window.prompt('编辑设备名称', dev.name);
+            if (nextName === null) return;
+            const trimmed = nextName.trim();
+            if (!trimmed) {
+              setStatus('设备名称不能为空', false);
+              return;
+            }
+            recordHistory();
+            dev.name = trimmed;
+            render();
+            setStatus(`已更新设备名称：${trimmed}`);
+          });
+          layer.appendChild(block);
+        });
+
+        body.appendChild(previewLayer);
+        body.appendChild(layer);
+
+        const foot = document.createElement('div');
+        foot.className = 'rack-foot';
+        foot.innerHTML = `
+          <div class="foot-cell"></div>
+          <div class="foot-cell"></div>
+          <div class="foot-cell"></div>
+        `;
+        body.appendChild(foot);
+
+        rackEl.appendChild(body);
+        root.appendChild(rackEl);
+      });
+
+      if (state.hoverTarget) {
+        const hit = root.querySelector(
+          `.slot[data-rack="${state.hoverTarget.rackId}"][data-u="${state.hoverTarget.topU}"]`
+        );
+        if (hit) hit.classList.add('hover-target');
+      }
+      paintPreview();
+    }
+
+    function makeCopyName(baseName) {
+      let i = 1;
+      let candidate = `${baseName}_副本`;
+      const hasName = n => state.devices.some(d => d.name === n);
+      while (hasName(candidate)) {
+        i += 1;
+        candidate = `${baseName}_副本${i}`;
+      }
+      return candidate;
+    }
+
+    function tryPasteCopiedDevice() {
+      if (!state.copiedDeviceId) {
+        setStatus('请先选中已放置设备并按 Ctrl+C', false);
+        return;
+      }
+      if (!state.hoverTarget) {
+        setStatus('请先把鼠标停在目标机柜U位上，再按 Ctrl+V', false);
+        return;
+      }
+      const src = findDevice(state.copiedDeviceId);
+      if (!src) {
+        setStatus('复制源设备不存在', false);
+        return;
+      }
+      const rack = findRack(state.hoverTarget.rackId);
+      if (!rack) {
+        setStatus('目标机柜不存在', false);
+        return;
+      }
+
+      const newDev = {
+        id: state.nextId++,
+        name: makeCopyName(src.name),
+        u: src.u,
+        rackId: null,
+        topU: null
+      };
+
+      if (!canPlace(newDev, state.hoverTarget.rackId, state.hoverTarget.topU)) {
+        setStatus('粘贴失败：目标位置冲突或越界', false);
+        return;
+      }
+
+      recordHistory();
+      state.devices.push(newDev);
+      rack.placements.push({ deviceId: newDev.id, topU: state.hoverTarget.topU });
+      newDev.rackId = rack.id;
+      newDev.topU = state.hoverTarget.topU;
+      state.selectedDeviceId = newDev.id;
+      render();
+      setStatus(`已粘贴：${newDev.name} -> ${rack.name} ${newDev.topU}U`);
+    }
+
+    function deleteSelectedDevice() {
+      const target = findDevice(state.selectedDeviceId);
+      if (!target) {
+        setStatus('请先选中要删除的设备', false);
+        return;
+      }
+      recordHistory();
+      state.racks.forEach(r => {
+        r.placements = r.placements.filter(p => p.deviceId !== target.id);
+      });
+      state.devices = state.devices.filter(d => d.id !== target.id);
+      if (state.copiedDeviceId === target.id) state.copiedDeviceId = null;
+      state.selectedDeviceId = null;
+      state.preview = null;
+      render();
+      setStatus(`已删除设备：${target.name}`);
+    }
+
+    function render() {
+      renderDevicePool();
+      renderRacks();
+    }
+
+    async function exportXlsx() {
+      if (!window.ExcelJS) {
+        setStatus('导出失败：ExcelJS 未加载', false);
+        return;
+      }
+
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet('设备落位图');
+      const excelRowHeight = 18;
+      ws.properties.defaultRowHeight = excelRowHeight;
+
+      const thin = { style: 'thin', color: { argb: 'FF000000' } };
+      const medium = { style: 'medium', color: { argb: 'FF000000' } };
+      const rackBandFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF00EAEA' } };
+      const unitFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF00F0F0' } };
+      const deviceFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1D1' } };
+
+      function colStart(rackIdx) {
+        return rackIdx * 5 + 1;
+      }
+
+      for (let i = 0; i < state.rackCount; i++) {
+        const base = colStart(i);
+        const titleRow = 1;
+        const topBarRow = 2;
+        const uStartRow = 3;
+        const uEndRow = state.totalU + 2;
+        const footRow = state.totalU + 3;
+
+        ws.getColumn(base).width = 5.2;
+        ws.getColumn(base + 1).width = 13.3;
+        ws.getColumn(base + 2).width = 14.2;
+        ws.getColumn(base + 3).width = 5.2;
+        ws.getColumn(base + 4).width = 8.8;
+
+        for (let r = 1; r <= footRow; r++) {
+          ws.getRow(r).height = excelRowHeight;
+        }
+
+        ws.mergeCells(titleRow, base + 1, titleRow, base + 2);
+        const titleCell = ws.getCell(titleRow, base + 1);
+        titleCell.value = state.racks[i].name;
+        titleCell.font = { name: '宋体', size: 10, bold: true };
+        titleCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+        titleCell.fill = undefined;
+        titleCell.border = { left: thin, right: thin };
+
+        const topLeft = ws.getCell(topBarRow, base);
+        topLeft.fill = rackBandFill;
+        topLeft.border = { left: thin, right: thin, top: thin, bottom: thin };
+
+        ws.mergeCells(topBarRow, base + 1, topBarRow, base + 2);
+        const topMid = ws.getCell(topBarRow, base + 1);
+        topMid.value = null;
+        topMid.fill = rackBandFill;
+        topMid.border = { left: thin, right: thin, top: thin, bottom: thin };
+
+        const uTitle = ws.getCell(topBarRow, base + 3);
+        uTitle.value = 'U数';
+        uTitle.font = { name: '等线', size: 10 };
+        uTitle.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+        uTitle.fill = unitFill;
+        uTitle.border = { left: thin, right: thin, top: thin, bottom: thin };
+
+        const rack = state.racks[i];
+        const occupiedRows = new Set();
+
+        rack.placements.forEach(p => {
+          const dev = state.devices.find(d => d.id === p.deviceId);
+          if (!dev) return;
+          const startRow = state.totalU - p.topU + 3;
+          const endRow = startRow + dev.u - 1;
+          for (let r = Math.max(startRow, uStartRow); r <= Math.min(endRow, uEndRow); r++) {
+            occupiedRows.add(r);
+          }
+        });
+
+        for (let u = state.totalU; u >= 1; u--) {
+          const row = state.totalU - u + 3;
+          const leftBand = ws.getCell(row, base);
+          leftBand.fill = rackBandFill;
+          leftBand.border = { left: thin, right: thin, top: thin, bottom: thin };
+
+          const c = ws.getCell(row, base + 3);
+          c.value = u;
+          c.numFmt = '00';
+          c.font = { name: '等线', size: 10 };
+          c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+          c.fill = unitFill;
+          c.border = { left: thin, right: thin, top: thin, bottom: thin };
+
+          if (!occupiedRows.has(row)) {
+            ws.getCell(row, base + 1).style = {};
+            ws.getCell(row, base + 2).style = {};
+            ws.mergeCells(row, base + 1, row, base + 2);
+            const emptyCell = ws.getCell(row, base + 1);
+            emptyCell.value = null;
+            emptyCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+            emptyCell.border = { left: thin, right: thin, top: thin, bottom: thin };
+          }
+        }
+
+        rack.placements
+          .slice()
+          .sort((a, b) => b.topU - a.topU)
+          .forEach(p => {
+          const dev = state.devices.find(d => d.id === p.deviceId);
+          if (!dev) return;
+
+          const startRow = state.totalU - p.topU + 3;
+          const endRow = startRow + dev.u - 1;
+          ws.mergeCells(startRow, base + 1, endRow, base + 2);
+          const dc = ws.getCell(startRow, base + 1);
+          dc.value = dev.name;
+          dc.font = { name: '宋体', size: 10 };
+          dc.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+          dc.fill = deviceFill;
+          dc.border = { left: medium, right: medium, top: medium, bottom: medium };
+        });
+
+        const footLeft = ws.getCell(footRow, base);
+        footLeft.fill = rackBandFill;
+        footLeft.border = { left: thin, right: thin, top: thin, bottom: thin };
+
+        ws.mergeCells(footRow, base + 1, footRow, base + 2);
+        const footMid = ws.getCell(footRow, base + 1);
+        footMid.value = null;
+        footMid.fill = rackBandFill;
+        footMid.border = { left: thin, right: thin, top: thin, bottom: thin };
+
+        const footRight = ws.getCell(footRow, base + 3);
+        footRight.value = null;
+        footRight.fill = rackBandFill;
+        footRight.border = { left: thin, right: thin, top: thin, bottom: thin };
+      }
+
+      const buf = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buf], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '设备落位图.xlsx';
+      a.click();
+      URL.revokeObjectURL(url);
+      setStatus('导出成功：设备落位图.xlsx');
+    }
+
+    document.getElementById('genRacks').addEventListener('click', () => {
+      const rc = Number(document.getElementById('rackCount').value);
+      const uc = Number(document.getElementById('uCount').value);
+      if (!Number.isFinite(rc) || rc < 1 || rc > 20) {
+        setStatus('机柜数量范围：1-20', false);
+        return;
+      }
+      if (!Number.isFinite(uc) || uc < 1 || uc > 60) {
+        setStatus('每柜U数范围：1-60', false);
+        return;
+      }
+      initRacks(rc, uc, true);
+    });
+
+    document.getElementById('addDev').addEventListener('click', () => {
+      const name = document.getElementById('devName').value.trim();
+      const u = Number(document.getElementById('devU').value);
+      if (!name) {
+        setStatus('请输入设备名称', false);
+        return;
+      }
+      if (!Number.isFinite(u) || u < 1 || u > state.totalU) {
+        setStatus(`设备U数应在 1-${state.totalU} 之间`, false);
+        return;
+      }
+      addDevice(name, u);
+      document.getElementById('devName').value = '';
+      document.getElementById('devU').value = '1';
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      exportXlsx().catch(err => {
+        console.error(err);
+        setStatus('导出失败：' + err.message, false);
+      });
+    });
+
+    document.addEventListener('keydown', e => {
+      const active = document.activeElement;
+      const isTyping = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA');
+      if (isTyping) return;
+      const cmdOrCtrl = e.ctrlKey || e.metaKey;
+
+      if (cmdOrCtrl && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        undoLastAction();
+        return;
+      }
+
+      if (e.key === 'Delete') {
+        e.preventDefault();
+        deleteSelectedDevice();
+        return;
+      }
+
+      if (cmdOrCtrl && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        const selected = findDevice(state.selectedDeviceId);
+        if (!selected || !selected.rackId) {
+          setStatus('请先点击一个已放置设备，再按 Ctrl+C', false);
+          return;
+        }
+        state.copiedDeviceId = selected.id;
+        setStatus(`已复制：${selected.name}（移动鼠标到目标U位后 Ctrl+V）`);
+      }
+
+      if (cmdOrCtrl && e.key.toLowerCase() === 'v') {
+        e.preventDefault();
+        tryPasteCopiedDevice();
+      }
+    });
+
+    initRacks(2, 42, false);
+    addDevice('超融合管理&业务交换机1', 1, false);
+    addDevice('超融合存储交换机1', 1, false);
+    addDevice('超融合服务器1', 2, false);
+    addDevice('超融合服务器2', 2, false);
+  </script>
+</body>
+</html>
