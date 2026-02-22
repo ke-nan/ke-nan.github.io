@@ -26,7 +26,6 @@ permalink: pretty
 paginate: 10
 include:
   - _headers
-  - _redirects
 exclude:
   [
     "less",
