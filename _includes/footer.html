@@ -33,19 +33,6 @@
 {% if site.service-worker %}
 <script src="{{ "/js/snackbar.js" | prepend: site.baseurl }}"></script>
 <script src="{{ "/js/sw-registration.js" | prepend: site.baseurl }}"></script>
-{% else %}
-<script>
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function (registrations) {
-            registrations.forEach(function (registration) { registration.unregister(); });
-        });
-    }
-    if ('caches' in window) {
-        caches.keys().then(function (keys) {
-            keys.forEach(function (key) { caches.delete(key); });
-        });
-    }
-</script>
 {% endif %}
 
 <!-- async load function -->
