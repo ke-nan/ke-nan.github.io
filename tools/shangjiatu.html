@@ -21,6 +21,8 @@
       --row-h: 22px;
       --slot-w: 180px;
       --u-w: 40px;
+      --panel-gap: 8px;
+      --panel-wide-w: var(--slot-w);
     }
 
     * { box-sizing: border-box; }
@@ -37,7 +39,7 @@
       margin: 0 auto;
       padding: 16px;
       display: grid;
-      grid-template-columns: 360px 1fr;
+      grid-template-columns: calc(var(--panel-wide-w) + 30px) 1fr;
       gap: 16px;
     }
 
@@ -46,6 +48,7 @@
       border: 1px solid #d8dee8;
       border-radius: 10px;
       padding: 14px;
+      width: calc(var(--panel-wide-w) + 30px);
     }
 
     h1 {
@@ -61,8 +64,9 @@
     .row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: var(--panel-gap);
       margin-bottom: 8px;
+      width: var(--panel-wide-w);
     }
 
     label {
@@ -101,16 +105,19 @@
     .device-pool {
       display: grid;
       gap: 8px;
+      justify-items: start;
       margin-top: 8px;
+      width: var(--slot-w);
       max-height: 40vh;
-      overflow: auto;
-      padding-right: 2px;
+      overflow-y: auto;
+      overflow-x: hidden;
     }
 
     .device-item {
       border: 2px solid var(--line);
       border-radius: 6px;
       padding: 6px 8px;
+      width: 100%;
       background: var(--device-bg);
       cursor: grab;
       user-select: none;
@@ -318,6 +325,7 @@
       font-size: 12px;
       color: var(--muted);
       line-height: 1.5;
+      width: var(--panel-wide-w);
     }
 
     .tips {
@@ -329,6 +337,11 @@
       color: #475467;
       font-size: 12px;
       line-height: 1.5;
+      width: var(--panel-wide-w);
+    }
+
+    .panel > button {
+      width: var(--panel-wide-w);
     }
 
     .ok { color: var(--ok); font-weight: 600; }
@@ -348,7 +361,7 @@
       <div class="row">
         <div>
           <label for="rackCount">机柜数量</label>
-          <input id="rackCount" type="number" min="1" max="20" value="2" />
+          <input id="rackCount" type="number" min="1" max="9" value="2" />
         </div>
         <div>
           <label for="uCount">每柜总U数</label>
@@ -361,18 +374,18 @@
       <div class="row">
         <div>
           <label for="devName">设备名称</label>
-          <input id="devName" type="text" placeholder="如：超融合服务器1" />
+          <input id="devName" type="text" placeholder="如：防火墙" />
         </div>
         <div>
           <label for="devU">设备高度(U)</label>
-          <input id="devU" type="number" min="1" max="20" value="1" />
+          <input id="devU" type="number" min="1" max="60" value="1" />
         </div>
       </div>
       <button id="addDev">加入待放置设备池</button>
 
       <h2>待放置设备</h2>
       <div id="devicePool" class="device-pool"></div>
-      <div class="hint">拖动设备到右侧机柜槽位（支持预览占位）；支持 Ctrl+C / Ctrl+V 复制粘贴、Ctrl+Z 撤销、Delete 删除选中设备、双击已拖放设备更改名称。</div>
+      <div class="hint">拖动设备到右侧机柜槽位（支持预览占位）；支持 Ctrl+C / Ctrl+V 复制粘贴、Ctrl+Z 撤销、Delete 删除选中设备，双击机柜名和设备名可改名。</div>
 
       <h2>导出</h2>
       <button id="exportBtn" class="btn-primary">导出 XLSX</button>
@@ -392,6 +405,7 @@
       devices: [],
       nextId: 1,
       draggingId: null,
+      dragGrabOffsetPx: 0,
       preview: null,
       selectedDeviceId: null,
       copiedDeviceId: null,
@@ -405,6 +419,19 @@
     function setStatus(msg, ok = true) {
       const el = document.getElementById('status');
       el.innerHTML = `状态：<span class="${ok ? 'ok' : ''}">${msg}</span>`;
+    }
+
+    function syncDeviceUInputLimit() {
+      const devUInput = document.getElementById('devU');
+      if (!devUInput) return;
+      const maxU = Math.max(1, Math.min(60, state.totalU));
+      devUInput.max = String(maxU);
+      const cur = Number(devUInput.value);
+      if (!Number.isFinite(cur) || cur < 1) {
+        devUInput.value = '1';
+        return;
+      }
+      if (cur > maxU) devUInput.value = String(maxU);
     }
 
     function createSnapshot() {
@@ -441,6 +468,7 @@
       state.preview = null;
       document.getElementById('rackCount').value = String(state.rackCount);
       document.getElementById('uCount').value = String(state.totalU);
+      syncDeviceUInputLimit();
       render();
     }
 
@@ -470,7 +498,9 @@
         name: String.fromCharCode(65 + i) + '机柜',
         placements: []
       }));
+      syncDeviceUInputLimit();
       state.devices.forEach(d => {
+        if (d.u > totalU) d.u = totalU;
         d.rackId = null;
         d.topU = null;
       });
@@ -497,6 +527,23 @@
 
     function findDevice(deviceId) {
       return state.devices.find(d => d.id === deviceId);
+    }
+
+    function renameRack(rackId) {
+      const rack = findRack(rackId);
+      if (!rack) return;
+      const nextName = window.prompt('编辑机柜名称', rack.name);
+      if (nextName === null) return;
+      const trimmed = nextName.trim();
+      if (!trimmed) {
+        setStatus('机柜名称不能为空', false);
+        return;
+      }
+      if (trimmed === rack.name) return;
+      recordHistory();
+      rack.name = trimmed;
+      renderRacks();
+      setStatus(`已更新机柜名称：${trimmed}`);
     }
 
     function canPlace(device, rackId, topU) {
@@ -546,14 +593,39 @@
     function onDragStart(e, deviceId) {
       state.draggingId = Number(deviceId);
       state.selectedDeviceId = Number(deviceId);
+      const src = e.currentTarget;
+      if (src && src.getBoundingClientRect) {
+        const rect = src.getBoundingClientRect();
+        const rawOffset = e.clientY - rect.top;
+        state.dragGrabOffsetPx = Math.max(0, Math.min(rawOffset, Math.max(rect.height - 1, 0)));
+      } else {
+        state.dragGrabOffsetPx = 0;
+      }
       e.dataTransfer.setData('text/plain', String(deviceId));
       e.dataTransfer.effectAllowed = 'move';
     }
 
     function onDragEnd() {
       state.draggingId = null;
+      state.dragGrabOffsetPx = 0;
       state.preview = null;
       render();
+    }
+
+    function calcTopUFromPointer(e, rackId, fallbackTopU) {
+      const root = document.getElementById('rackGrid');
+      if (!root) return fallbackTopU;
+      const layer = root.querySelector(`.preview-layer[data-rack="${rackId}"]`);
+      if (!layer) return fallbackTopU;
+      const rect = layer.getBoundingClientRect();
+      if (!rect.height) return fallbackTopU;
+
+      const y = e.clientY - rect.top;
+      const clampedY = Math.max(0, Math.min(y, rect.height - 1));
+      const hoverRowFromTop = Math.floor(clampedY / rowPx);
+      const hoverTopU = state.totalU - hoverRowFromTop;
+      const offsetRows = Math.floor((state.dragGrabOffsetPx || 0) / rowPx);
+      return hoverTopU + offsetRows;
     }
 
     function setHoverTarget(rackId, topU) {
@@ -596,11 +668,25 @@
       layer.appendChild(preview);
     }
 
-    function onDropSlot(e, rackId, topU) {
+    function onDropSlot(e, rackId, fallbackTopU) {
       e.preventDefault();
       const id = Number(e.dataTransfer.getData('text/plain') || state.draggingId);
       if (!id) return;
+      const topU = calcTopUFromPointer(e, rackId, fallbackTopU);
       placeDevice(id, rackId, topU);
+    }
+
+    function onDragOverRackBody(e, rackId) {
+      e.preventDefault();
+      const topU = calcTopUFromPointer(e, rackId, state.totalU);
+      updatePreview(rackId, topU);
+      setHoverTarget(rackId, topU);
+    }
+
+    function onDropRackBody(e, rackId) {
+      e.preventDefault();
+      const topU = calcTopUFromPointer(e, rackId, state.totalU);
+      onDropSlot(e, rackId, topU);
     }
 
     function renderDevicePool() {
@@ -646,14 +732,23 @@
         head.className = 'rack-head';
         head.innerHTML = `
           <div class="u-left-title"></div>
-          <div class="rack-title">${rack.name}</div>
+          <div class="rack-title"></div>
           <div class="u-title">U数</div>
         `;
+        const rackTitleEl = head.querySelector('.rack-title');
+        rackTitleEl.textContent = rack.name;
+        rackTitleEl.title = '双击重命名';
+        rackTitleEl.addEventListener('dblclick', ev => {
+          ev.stopPropagation();
+          renameRack(rack.id);
+        });
         rackEl.appendChild(head);
 
         const body = document.createElement('div');
         body.className = 'rack-body';
         body.style.setProperty('--row-h', `${rowPx}px`);
+        body.addEventListener('dragover', ev => onDragOverRackBody(ev, rack.id));
+        body.addEventListener('drop', ev => onDropRackBody(ev, rack.id));
 
         for (let u = state.totalU; u >= 1; u--) {
           const row = document.createElement('div');
@@ -668,16 +763,7 @@
           slot.dataset.u = String(u);
           slot.addEventListener('mouseenter', () => setHoverTarget(rack.id, u));
           slot.addEventListener('click', () => setHoverTarget(rack.id, u));
-          slot.addEventListener('dragover', ev => {
-            ev.preventDefault();
-            slot.classList.add('over');
-            updatePreview(rack.id, u);
-          });
           slot.addEventListener('dragleave', () => slot.classList.remove('over'));
-          slot.addEventListener('drop', ev => {
-            slot.classList.remove('over');
-            onDropSlot(ev, rack.id, u);
-          });
 
           const uNum = document.createElement('div');
           uNum.className = 'u-num';
@@ -991,8 +1077,8 @@
     document.getElementById('genRacks').addEventListener('click', () => {
       const rc = Number(document.getElementById('rackCount').value);
       const uc = Number(document.getElementById('uCount').value);
-      if (!Number.isFinite(rc) || rc < 1 || rc > 20) {
-        setStatus('机柜数量范围：1-20', false);
+      if (!Number.isFinite(rc) || rc < 1 || rc > 9) {
+        setStatus('机柜数量范围：1-9', false);
         return;
       }
       if (!Number.isFinite(uc) || uc < 1 || uc > 60) {
@@ -1061,8 +1147,8 @@
     });
 
     initRacks(2, 42, false);
-    addDevice('超融合管理&业务交换机1', 1, false);
-    addDevice('超融合存储交换机1', 1, false);
+    addDevice('超融合交换机1', 1, false);
+    addDevice('超融合交换机2', 1, false);
     addDevice('超融合服务器1', 2, false);
     addDevice('超融合服务器2', 2, false);
   </script>
