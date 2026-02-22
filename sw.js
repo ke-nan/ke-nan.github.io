@@ -9,7 +9,7 @@
 // CACHE_NAMESPACE
 // CacheStorage is shared between all sites under same domain.
 // A namespace can prevent potential name conflicts and mis-deletion.
-const CACHE_NAMESPACE = 'main-v2-'
+const CACHE_NAMESPACE = 'main-v3-'
 
 const CACHE = CACHE_NAMESPACE + 'precache-then-runtime';
 const PRECACHE_LIST = [
@@ -33,7 +33,17 @@ const HOSTNAME_WHITELIST = [
   "yanshuo.io",
   "cdnjs.cloudflare.com"
 ]
-const DEPRECATED_CACHES = ['precache-v1', 'runtime', 'main-precache-v1', 'main-runtime']
+const DEPRECATED_CACHES = [
+  'precache-v1',
+  'runtime',
+  'main-precache-v1',
+  'main-runtime',
+  'main-v2-precache-then-runtime'
+]
+
+// New tools pages should bypass SW and use normal CDN/network behavior.
+const BYPASS_SW_PATH_PREFIXES = ['/tools/']
+const BYPASS_SW_EXACT_PATHS = ['/js/vendor/exceljs.min.js']
 
 
 // The Util Function to hack URLs of intercepted requests
@@ -160,13 +170,23 @@ var fetchHelper = {
  *  void respondWith(Promise<Response> r);
  */
 self.addEventListener('fetch', event => {
+  const requestUrl = new URL(event.request.url)
+
+  // Let selected paths use browser + CDN directly.
+  if (requestUrl.origin === self.location.origin) {
+    if (BYPASS_SW_EXACT_PATHS.includes(requestUrl.pathname) ||
+        BYPASS_SW_PATH_PREFIXES.some(prefix => requestUrl.pathname.startsWith(prefix))) {
+      return
+    }
+  }
+
   // logs for debugging
   //console.log(`fetch ${event.request.url}`)
   //console.log(` - type: ${event.request.type}; destination: ${event.request.destination}`)
   //console.log(` - mode: ${event.request.mode}, accept: ${event.request.headers.get('accept')}`)
 
   // Skip some of cross-origin requests, like those for Google Analytics.
-  if (HOSTNAME_WHITELIST.indexOf(new URL(event.request.url).hostname) > -1) {
+  if (HOSTNAME_WHITELIST.indexOf(requestUrl.hostname) > -1) {
 
     // Redirect in SW manually fixed github pages 404s on repo?blah
     if (shouldRedirect(event.request)) {
