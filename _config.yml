@@ -1,10 +1,10 @@
 # Site settings
 title: Haike Nan's Blog
-SEOTitle: 南海科的博客 | Haike Nan's Blog
+SEOTitle: Haike Nan's Blog
 #email: huxpro@gmail.com
 description: "世界是我们的游乐场"
-keyword: "南海科,博客,网络工程师,路由,交换,安全,无线,虚拟化,云计算"
-url: "https://ccie.me" # your host, for absolute URL
+keyword: "Haike Nan,blog,博客,网络工程师,路由,交换,安全,无线,虚拟化,存储,云计算"
+url: "https://nan.cool" # your host, for absolute URL
 baseurl: "" # for example, '/blog' if your blog hosted on 'host/blog'
 
 # Publish posts or collection documents with a future date.
