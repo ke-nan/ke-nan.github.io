@@ -94,6 +94,62 @@ layout: default
 <button id="tech-back-top" class="tech-back-top" aria-label="Back to top" title="Back to top">
     <i class="fa fa-chevron-up"></i>
 </button>
+<div id="post-image-viewer" class="post-image-viewer" aria-hidden="true" role="dialog" aria-label="Image viewer">
+    <button type="button" class="post-image-viewer-close" aria-label="Close image viewer">&times;</button>
+    <img class="post-image-viewer-image" src="" alt="">
+</div>
+<style>
+    .post-container img[data-zoomable="true"] {
+        cursor: zoom-in;
+    }
+
+    .post-image-viewer {
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(4, 12, 24, 0.88);
+        backdrop-filter: blur(2px);
+    }
+
+    .post-image-viewer.is-open {
+        display: flex;
+    }
+
+    .post-image-viewer-image {
+        max-width: min(92vw, 1400px);
+        max-height: 88vh;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+        border-radius: 4px;
+        cursor: zoom-out;
+    }
+
+    .post-image-viewer-close {
+        position: absolute;
+        top: 14px;
+        right: 16px;
+        width: 44px;
+        height: 44px;
+        border: 0;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.14);
+        color: #fff;
+        font-size: 30px;
+        line-height: 1;
+    }
+
+    .post-image-viewer-close:hover,
+    .post-image-viewer-close:focus {
+        background: rgba(255, 255, 255, 0.24);
+        outline: none;
+    }
+</style>
 <script>
     (function () {
         var button = document.getElementById('tech-back-top');
@@ -170,6 +226,64 @@ layout: default
         });
 
         onScroll();
+    })();
+
+    (function () {
+        var container = document.querySelector('.post-container');
+        var viewer = document.getElementById('post-image-viewer');
+        if (!container || !viewer) return;
+
+        var viewerImage = viewer.querySelector('.post-image-viewer-image');
+        var closeButton = viewer.querySelector('.post-image-viewer-close');
+
+        function isImageLink(anchor) {
+            if (!anchor || !anchor.href) return false;
+            return /\.(avif|bmp|gif|jpe?g|png|svg|webp)(\?.*)?$/i.test(anchor.href);
+        }
+
+        function getLargeImageSrc(img) {
+            var parentLink = img.closest('a');
+            if (isImageLink(parentLink)) return parentLink.href;
+            return img.currentSrc || img.src;
+        }
+
+        function openViewer(img) {
+            var src = getLargeImageSrc(img);
+            if (!src) return;
+            viewerImage.src = src;
+            viewerImage.alt = img.alt || '';
+            viewer.classList.add('is-open');
+            viewer.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('no-scroll');
+        }
+
+        function closeViewer() {
+            viewer.classList.remove('is-open');
+            viewer.setAttribute('aria-hidden', 'true');
+            viewerImage.removeAttribute('src');
+            document.body.classList.remove('no-scroll');
+        }
+
+        container.querySelectorAll('img').forEach(function (img) {
+            if (!img.src) return;
+            img.setAttribute('data-zoomable', 'true');
+            img.addEventListener('click', function (event) {
+                event.preventDefault();
+                openViewer(img);
+            });
+        });
+
+        closeButton.addEventListener('click', closeViewer);
+        viewer.addEventListener('click', function (event) {
+            if (event.target === viewer || event.target === viewerImage) {
+                closeViewer();
+            }
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && viewer.classList.contains('is-open')) {
+                closeViewer();
+            }
+        });
     })();
 </script>
 
