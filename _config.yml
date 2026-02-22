@@ -24,6 +24,9 @@ twitter_username: #
 highlighter: rouge
 permalink: pretty
 paginate: 10
+include:
+  - _headers
+  - _redirects
 exclude:
   [
     "less",
@@ -67,9 +70,10 @@ netease_comment: false
 # Baidu Analytics
 # ba_track_id: [your track id]
 
-# Google Analytics
-ga_track_id: "UA-49627206-1" # Format: UA-xxxxxx-xx
-ga_domain: ccie.me
+# Google Analytics (UA/analytics.js is deprecated)
+# If needed, migrate to GA4 (gtag.js) later.
+# ga_track_id:
+# ga_domain:
 
 # Sidebar settings
 sidebar: true # whether or not using Sidebar.
