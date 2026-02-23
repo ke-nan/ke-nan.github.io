@@ -224,6 +224,28 @@ button.danger {
   gap: 8px;
 }
 
+.md-tools {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.md-btn {
+  background: #f5f8fb;
+  color: #24455f;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 6px 10px;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.md-btn:hover {
+  background: #e7f1f9;
+  border-color: #b8d4ea;
+}
+
 .filename-line {
   margin: 12px 0;
 }

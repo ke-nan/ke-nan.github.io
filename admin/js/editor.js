@@ -37,7 +37,8 @@
     uploadBtn: document.getElementById("uploadBtn"),
     deleteImageBtn: document.getElementById("deleteImageBtn"),
     filePicker: document.getElementById("filePicker"),
-    userLabel: document.getElementById("userLabel")
+    userLabel: document.getElementById("userLabel"),
+    mdButtons: document.querySelectorAll("[data-md-action]")
   };
 
   function setStatus(message, isError) {
@@ -479,6 +480,86 @@
     renderPreview();
   }
 
+  function replaceSelection(replacer) {
+    var textarea = el.body;
+    var start = textarea.selectionStart;
+    var end = textarea.selectionEnd;
+    var current = textarea.value;
+    var selected = current.slice(start, end);
+    var replaced = replacer(selected, start, end, current);
+    var nextText = current.slice(0, start) + replaced + current.slice(end);
+    textarea.value = nextText;
+    textarea.selectionStart = start;
+    textarea.selectionEnd = start + replaced.length;
+    textarea.focus();
+    renderPreview();
+  }
+
+  function wrapSelection(prefix, suffix, placeholder) {
+    replaceSelection(function (selected) {
+      var content = selected || placeholder || "";
+      return prefix + content + suffix;
+    });
+  }
+
+  function prefixLines(prefix, placeholder) {
+    replaceSelection(function (selected) {
+      var content = selected || placeholder || "";
+      var lines = content.split("\n");
+      return lines
+        .map(function (line) {
+          return prefix + line;
+        })
+        .join("\n");
+    });
+  }
+
+  function applyMarkdownAction(action) {
+    switch (action) {
+      case "h1":
+        prefixLines("# ", "一级标题");
+        break;
+      case "h2":
+        prefixLines("## ", "二级标题");
+        break;
+      case "h3":
+        prefixLines("### ", "三级标题");
+        break;
+      case "paragraph":
+        insertAtCursor("\n\n正文内容\n\n");
+        break;
+      case "quote":
+        prefixLines("> ", "引用内容");
+        break;
+      case "bold":
+        wrapSelection("**", "**", "加粗文本");
+        break;
+      case "italic":
+        wrapSelection("*", "*", "斜体文本");
+        break;
+      case "inline-code":
+        wrapSelection("`", "`", "code");
+        break;
+      case "code-block":
+        wrapSelection("```\n", "\n```", "code");
+        break;
+      case "ul":
+        prefixLines("- ", "列表项");
+        break;
+      case "ol":
+        prefixLines("1. ", "列表项");
+        break;
+      case "link":
+        wrapSelection("[", "](https://example.com)", "链接文本");
+        break;
+      case "image":
+        insertAtCursor("![](/assets/img/)");
+        break;
+      default:
+        break;
+    }
+  }
+
   function mimeToExt(type) {
     var map = {
       "image/png": "png",
@@ -565,6 +646,11 @@
     el.filePicker.click();
   });
   el.deleteImageBtn.addEventListener("click", deleteImageByPrompt);
+  el.mdButtons.forEach(function (button) {
+    button.addEventListener("click", function () {
+      applyMarkdownAction(button.getAttribute("data-md-action"));
+    });
+  });
 
   el.filePicker.addEventListener("change", function (event) {
     var file = event.target.files && event.target.files[0];
