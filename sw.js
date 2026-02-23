@@ -42,7 +42,7 @@ const DEPRECATED_CACHES = [
 ]
 
 // New tools pages should bypass SW and use normal CDN/network behavior.
-const BYPASS_SW_PATH_PREFIXES = ['/tools/']
+const BYPASS_SW_PATH_PREFIXES = ['/tools/', '/admin']
 const BYPASS_SW_EXACT_PATHS = ['/js/vendor/exceljs.min.js']
 
 
@@ -284,3 +284,4 @@ function revalidateContent(cachedResp, fetchedResp) {
     })
     .catch(err => console.log(err))
 }
+

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Admin Login</title>
+  <link rel="stylesheet" href="./css/admin.css">
+</head>
+<body class="admin-login-page">
+  <main class="login-shell">
+    <section class="card">
+      <h1>Blog Admin</h1>
+      <p class="muted">Use GitHub username + Fine-grained PAT to continue.</p>
+
+      <form id="loginForm" autocomplete="off">
+        <label for="usernameInput">GitHub Username</label>
+        <input id="usernameInput" name="username" type="text" required placeholder="ke-nan">
+
+        <label for="tokenInput">GitHub PAT</label>
+        <input id="tokenInput" name="token" type="password" required placeholder="github_pat_...">
+
+        <button type="submit" id="loginBtn">Login</button>
+      </form>
+
+      <p id="loginStatus" class="status ok">Ready.</p>
+      <p class="hint">Token should have repository <code>Contents: Read and Write</code> permission.</p>
+    </section>
+  </main>
+
+  <script src="./config.js"></script>
+  <script src="./js/github-api.js"></script>
+  <script>
+    (function (window, document) {
+      "use strict";
+
+      var api = window.AdminGithubApi;
+      var cfg = api.mergeConfig();
+      var keys = api.storageKeys();
+      var form = document.getElementById("loginForm");
+      var statusNode = document.getElementById("loginStatus");
+      var usernameInput = document.getElementById("usernameInput");
+      var tokenInput = document.getElementById("tokenInput");
+      var loginBtn = document.getElementById("loginBtn");
+
+      if (sessionStorage.getItem(keys.token)) {
+        window.location.href = "./index.html";
+      }
+
+      function setStatus(text, isError) {
+        statusNode.textContent = text;
+        statusNode.className = isError ? "status error" : "status ok";
+      }
+
+      form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        var username = usernameInput.value.trim();
+        var token = tokenInput.value.trim();
+
+        if (!username || !token) {
+          setStatus("Username and token are required.", true);
+          return;
+        }
+
+        try {
+          loginBtn.disabled = true;
+          setStatus("Verifying token...", false);
+
+          var client = api.createClient(token);
+          var me = await client.getUser();
+
+          if (me.login.toLowerCase() !== username.toLowerCase()) {
+            throw new Error("Username does not match token owner.");
+          }
+
+          if (cfg.ADMIN_GITHUB_USER && me.login.toLowerCase() !== cfg.ADMIN_GITHUB_USER.toLowerCase()) {
+            throw new Error("This user is not allowed to access admin.");
+          }
+
+          sessionStorage.setItem(keys.token, token);
+          sessionStorage.setItem(keys.user, me.login);
+          setStatus("Login success, redirecting...", false);
+          window.location.href = "./index.html";
+        } catch (err) {
+          setStatus(err.message || "Login failed.", true);
+          loginBtn.disabled = false;
+        }
+      });
+    })(window, document);
+  </script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Blog Admin Editor</title>
+  <link rel="stylesheet" href="./css/admin.css">
+</head>
+<body class="admin-editor-page">
+  <header class="topbar">
+    <div class="brand">Blog Admin</div>
+    <div class="top-actions">
+      <span class="muted">User: <strong id="userLabel">-</strong></span>
+      <button id="logoutBtn" type="button" class="ghost">Logout</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar card">
+      <div class="sidebar-header">
+        <input id="searchInput" type="text" placeholder="Search filename...">
+      </div>
+      <div id="postList" class="post-list"></div>
+    </aside>
+
+    <section class="editor card">
+      <div class="toolbar">
+        <button id="newBtn" type="button">New</button>
+        <button id="saveBtn" type="button">Publish</button>
+        <button id="deleteBtn" type="button" class="danger" disabled>Delete</button>
+        <button id="uploadBtn" type="button" class="ghost">Upload Image</button>
+        <button id="deleteImageBtn" type="button" class="ghost">Delete Image</button>
+        <input id="filePicker" type="file" accept="image/*" hidden>
+      </div>
+
+      <p class="muted filename-line">File: <code id="filenameDisplay">(new post)</code></p>
+
+      <div class="field-grid">
+        <label>
+          <span>Title</span>
+          <input id="titleInput" type="text" placeholder="Post title">
+        </label>
+        <label>
+          <span>Subtitle</span>
+          <input id="subtitleInput" type="text" placeholder="Hello World, Hello Blog">
+        </label>
+        <label class="full-row">
+          <span>Tags (comma separated)</span>
+          <input id="tagsInput" type="text" placeholder="BBR, linux, 脚本">
+        </label>
+      </div>
+
+      <div class="editor-grid">
+        <label>
+          <span>Markdown</span>
+          <textarea id="bodyInput" placeholder="Write markdown here..."></textarea>
+        </label>
+        <label>
+          <span>Preview</span>
+          <div id="previewPane" class="preview"></div>
+        </label>
+      </div>
+
+      <p id="statusText" class="status ok">Ready.</p>
+    </section>
+  </main>
+
+  <script src="./config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pinyin-pro/dist/index.min.js"></script>
+  <script src="./js/github-api.js"></script>
+  <script src="./js/slugify-cn.js"></script>
+  <script src="./js/editor.js"></script>
+</body>
+</html>
