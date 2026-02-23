@@ -5,7 +5,12 @@ layout: home-tech
 <section class="tech-board">
   <div class="tech-content">
     <div class="tech-post-list">
-      {% for post in paginator.posts %}
+      {% assign current_page = paginator.page | default: 1 %}
+      {% assign per_page = site.paginate | default: 10 %}
+      {% assign all_posts_sorted = site.posts | sort: "date" | reverse %}
+      {% assign page_offset = current_page | minus: 1 | times: per_page %}
+      {% assign page_posts = all_posts_sorted | slice: page_offset, per_page %}
+      {% for post in page_posts %}
       <article class="tech-post-item">
         <h2 class="post-title">
           <a href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>
