@@ -6,6 +6,20 @@
   <meta name="robots" content="noindex,nofollow,noarchive">
   <title>Blog Admin Editor</title>
   <link rel="stylesheet" href="./css/admin.css">
+  <script>
+    (function (window) {
+      "use strict";
+      var token = "";
+      try {
+        token = window.sessionStorage.getItem("admin.github.token") || "";
+      } catch (err) {
+        token = "";
+      }
+      if (!token) {
+        window.location.replace("./login.html");
+      }
+    })(window);
+  </script>
 </head>
 <body class="admin-editor-page">
   <header class="topbar">
