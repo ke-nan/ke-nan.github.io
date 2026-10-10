@@ -9,6 +9,35 @@
   }
 
   var cfg = api.mergeConfig();
+  // The preview is editable; Markdown remains the authoritative stored format.
+  var richEditor = null;
+  var activeEditor = "markdown";
+  function getRichEditor() {
+    if (!richEditor && window.TurndownService) {
+      richEditor = new window.TurndownService({
+        headingStyle: "atx",
+        codeBlockStyle: "fenced",
+        bulletListMarker: "-",
+        emDelimiter: "*"
+      });
+      if (window.turndownPluginGfm && window.turndownPluginGfm.gfm) {
+        richEditor.use(window.turndownPluginGfm.gfm);
+      }
+    }
+    return richEditor;
+  }
+  function syncRichToMarkdown() {
+    var converter = getRichEditor();
+    if (!converter) {
+      setStatus("所见即所得组件加载失败，请改用 Markdown 源码编辑。", true);
+      return false;
+    }
+    // Sanitize any externally pasted HTML before conversion.
+    var html = window.DOMPurify ? window.DOMPurify.sanitize(el.preview.innerHTML) : el.preview.innerHTML;
+    el.body.value = converter.turndown(html).replace(/^\n+|\n+$/g, "");
+    return true;
+  }
+
   var keys = api.storageKeys();
 
   var state = {
@@ -241,6 +270,7 @@
     el.filename.textContent = state.currentName || "(new post)";
     el.deleteBtn.disabled = !state.currentPath;
 
+    activeEditor = "markdown";
     renderPreview();
   }
 
@@ -341,6 +371,7 @@
   }
 
   async function savePost() {
+    if (activeEditor === "rich" && !syncRichToMarkdown()) return;
     var draft = makeCurrentDraft();
     if (!draft.title) {
       setStatus("Title is required.", true);
@@ -515,6 +546,32 @@
   }
 
   function applyMarkdownAction(action) {
+    if (activeEditor === "rich") {
+      if (!getRichEditor()) {
+        setStatus("所见即所得组件加载失败，请改用 Markdown 源码编辑。", true);
+        return;
+      }
+      el.preview.focus();
+      var formats = { h1:"h1", h2:"h2", h3:"h3", paragraph:"p", quote:"blockquote" };
+      if (formats[action]) {
+        document.execCommand("formatBlock", false, formats[action]);
+      } else if (action === "bold" || action === "italic") {
+        document.execCommand(action, false, null);
+      } else if (action === "ul" || action === "ol") {
+        document.execCommand(action === "ul" ? "insertUnorderedList" : "insertOrderedList", false, null);
+      } else if (action === "link" || action === "image") {
+        var address = window.prompt(action === "link" ? "输入链接 URL" : "输入图片 URL", "https://");
+        if (address && /^(https?:\/\/|\/)/i.test(address)) {
+          document.execCommand(action === "link" ? "createLink" : "insertImage", false, address);
+        }
+      } else if (action === "inline-code") {
+        document.execCommand("insertHTML", false, "<code>code</code>");
+      } else if (action === "code-block") {
+        document.execCommand("insertHTML", false, "<pre><code>code</code></pre>");
+      }
+      syncRichToMarkdown();
+      return;
+    }
     switch (action) {
       case "h1":
         prefixLines("# ", "一级标题");
@@ -585,7 +642,13 @@
       await state.client.upsertBinaryFile(repoPath, bytes, "image: upload " + repoPath);
       var publicPath = "/" + repoPath;
       var markdown = "![](" + publicPath + ")";
-      insertAtCursor(markdown);
+      if (activeEditor === "rich") {
+        el.preview.focus();
+        document.execCommand("insertImage", false, publicPath);
+        syncRichToMarkdown();
+      } else {
+        insertAtCursor(markdown);
+      }
       setStatus("Uploaded " + filename, false);
     } catch (err) {
       setStatus(err.message, true);
@@ -595,7 +658,8 @@
   function renderPreview() {
     var source = el.body.value || "";
     if (window.marked && typeof window.marked.parse === "function") {
-      el.preview.innerHTML = window.marked.parse(source);
+      var rendered = window.marked.parse(source);
+      el.preview.innerHTML = window.DOMPurify ? window.DOMPurify.sanitize(rendered) : escapeHtml(source).replace(/\n/g, "<br>");
     } else {
       el.preview.innerHTML = "<pre>" + escapeHtml(source) + "</pre>";
     }
@@ -663,7 +727,35 @@
     el.filePicker.value = "";
   });
 
-  el.body.addEventListener("input", renderPreview);
+  el.preview.addEventListener("focus", function () { activeEditor = "rich"; });
+  el.preview.addEventListener("input", function () {
+    activeEditor = "rich";
+    syncRichToMarkdown();
+  });
+  el.preview.addEventListener("paste", function (event) {
+    var items = event.clipboardData && event.clipboardData.items;
+    if (items) for (var i = 0; i < items.length; i += 1) {
+      if (items[i].kind === "file" && /^image\//.test(items[i].type)) {
+        var blob = items[i].getAsFile();
+        if (blob) { event.preventDefault(); activeEditor = "rich"; uploadImageBlob(blob); return; }
+      }
+    }
+    // Paste as plain text to avoid untrusted HTML and unexpected styling.
+    event.preventDefault();
+    document.execCommand("insertText", false, event.clipboardData.getData("text/plain"));
+    syncRichToMarkdown();
+  });
+  el.preview.addEventListener("blur", function () {
+    if (activeEditor === "rich") syncRichToMarkdown();
+  });
+  el.mdButtons.forEach(function (button) {
+    button.addEventListener("mousedown", function (event) {
+      // Keep the contenteditable selection when applying formatting.
+      if (activeEditor === "rich") event.preventDefault();
+    });
+  });
+  el.body.addEventListener("focus", function () { activeEditor = "markdown"; });
+  el.body.addEventListener("input", function () { activeEditor = "markdown"; renderPreview(); });
 
   el.body.addEventListener("paste", function (event) {
     var items = event.clipboardData && event.clipboardData.items;

@@ -309,3 +309,12 @@ button.danger {
     grid-template-columns: 1fr;
   }
 }
+
+/* Rich editing uses the rendered pane itself, while Markdown remains editable. */
+.preview[contenteditable="true"] { cursor: text; outline-offset: 2px; line-height: 1.65; overflow-wrap: anywhere; }
+.preview[contenteditable="true"]:focus { outline: 2px solid rgba(11,111,175,.22); border-color: var(--primary); }
+.preview[contenteditable="true"]:empty::before { content: attr(data-placeholder); color: var(--muted); pointer-events: none; }
+.preview blockquote { border-left: 3px solid var(--primary); padding-left: 12px; margin-left: 0; color: #52697a; }
+.preview code { background: #f2f5f8; padding: 2px 4px; border-radius: 3px; }
+.preview pre { background: #f2f5f8; padding: 10px; border-radius: 6px; overflow: auto; }
+.preview pre code { padding: 0; }

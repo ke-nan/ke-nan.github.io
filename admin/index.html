@@ -83,11 +83,11 @@
 
       <div class="editor-grid">
         <label>
-          <span>Preview</span>
-          <div id="previewPane" class="preview"></div>
+          <span>所见即所得（可直接编辑）</span>
+          <div id="previewPane" class="preview" contenteditable="true" role="textbox" aria-multiline="true" aria-label="所见即所得编辑区" spellcheck="true" data-placeholder="直接在这里输入文章内容…"></div>
         </label>
         <label>
-          <span>Markdown</span>
+          <span>Markdown 源码</span>
           <textarea id="bodyInput" placeholder="Write markdown here..."></textarea>
         </label>
       </div>
@@ -99,6 +99,9 @@
   <script src="./config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pinyin-pro/dist/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/turndown-plugin-gfm@1/dist/turndown-plugin-gfm.js"></script>
   <script src="./js/github-api.js"></script>
   <script src="./js/slugify-cn.js"></script>
   <script src="./js/editor.js"></script>
