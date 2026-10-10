@@ -1,10 +1,10 @@
 # Site settings
-title: Haike Nan's Blog
-SEOTitle: Haike Nan's Blog
+title: Haike Blog
+SEOTitle: Haike Blog
 #email: huxpro@gmail.com
 description: "世界是我们的游乐场"
 keyword: "Haike Nan,blog,博客,网络工程师,路由,交换,安全,无线,虚拟化,存储,云计算"
-url: "https://nan.cool" # your host, for absolute URL
+url: "https://haike.blog" # your host, for absolute URL
 baseurl: "" # for example, '/blog' if your blog hosted on 'host/blog'
 
 # Publish posts or collection documents with a future date.
@@ -77,7 +77,7 @@ netease_comment: false
 # Sidebar settings
 sidebar: true # whether or not using Sidebar.
 sidebar-about-description: "我是Haike Nan，一名网络攻城狮，主修路由交换、安全、无线、虚拟化、分布式存储，略懂一点云计算。"
-sidebar-avatar: https://img.ccie.me/ciooo_com_263_4-124.jpg # use absolute URL, seeing it's used in both `/` and `/about/`
+sidebar-avatar: https://img.nan.cool/ciooo_com_263_4-124.jpg # use absolute URL, seeing it's used in both `/` and `/about/`
 
 # Featured Tags
 featured-tags: true # whether or not using Feature-Tags
